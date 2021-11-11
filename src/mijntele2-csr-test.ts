@@ -43,7 +43,19 @@ export const options = {
         {duration: "2s", target: "2"},
         {duration: "2s", target: "2"},
         {duration: "2s", target: "0"},
-    ]
+    ],
+    thresholds: {
+        // During the whole test execution, the error rate must be lower than 1%.
+        http_req_failed: ['rate<0.01'],
+        http_req_duration: ['p(90)<500'],
+        app_authorize: ['p(90)<500'],
+        app_login: ['p(90)<500'],
+        app_token: ['p(90)<500'],
+        app_impersonate: ['p(90)<500'],
+        app_introspect: ['p(90)<500'],
+        app_revoke: ['p(90)<500'],
+        app_logout: ['p(90)<500'],
+    },
 }
 
 export default function () {
@@ -53,16 +65,18 @@ export default function () {
     let access_token = "";
     let refresh_token = "";
     const state = randomString(16);
+    let result = true;
 
     group("login", () => {
         const authUrl = `${host}/oauth2/authorize?client_id=${client_id}&response_type=code&state=${state}&redirect_uri=${redirect_uri}&scope=${scope}`
         const resp = http.get(authUrl);
         authorizeTrend.add(resp.timings.duration);
-        check(resp, {
+        result = check(resp, {
             "authorize status is 200": (r) => r.status === 200,
             "redirects to login": (r) => r.url.startsWith(login_uri),
             "login page has state": (r) => r.url.includes(`state=${state}`),
         });
+        if (!result) return;
         const loginResp = resp.submitForm({
             formSelector: '#form',
             fields: {
@@ -75,7 +89,7 @@ export default function () {
             submitSelector: "button.button-login"
         });
         loginTrend.add(loginResp.timings.duration);
-        check(loginResp, {
+        result = check(loginResp, {
             "login status is 302": (r) => r.status === 302,
             "login redirects to redirect_uri": (r) => r.headers["Location"].startsWith(redirect_uri),
             "state is returned": (r) => r.headers["Location"].includes(`state=${state}`),
@@ -97,7 +111,7 @@ export default function () {
             }
         });
         tokenTrend.add(resp.timings.duration);
-        check(resp, {
+        result = check(resp, {
             "token status is 200": (r) => r.status === 200,
             "access token is returned": (r) => r.json("access_token") !== undefined,
             "id token is returned": (r) => r.json("id_token") !== undefined,
@@ -109,7 +123,6 @@ export default function () {
     });
 
     group("introspect", () => {
-        let result = true;
         const resp = http.post(introspectUrl, {
             token: access_token
         }, {
@@ -131,7 +144,7 @@ export default function () {
             }
         });
         introspectTrend.add(refreshResp.timings.duration);
-        check(refreshResp, {
+        result = check(refreshResp, {
             "refresh introspect status is 200": (r) => r.status === 200,
             "refresh introspect returns active": (r) => r.json("active") === true,
         });
@@ -182,7 +195,7 @@ export default function () {
             }
         });
         revokeTrend.add(revokeResp.timings.duration);
-        check(revokeResp, {
+        result = check(revokeResp, {
             "revoke status is 200": (r) => r.status === 200,
         });
     });
@@ -192,7 +205,7 @@ export default function () {
             redirects: 0,
         });
         logoutTrend.add(resp.timings.duration);
-        check(resp, {
+        result = check(resp, {
             "logout status is 200": (r) => r.status === 302,
             "logout redirects to redirect_uri": (r) => r.headers["Location"].startsWith(redirect_uri),
         });
