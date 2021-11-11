@@ -108,8 +108,8 @@ var options = {
     duration: "2s",
     target: "2"
   }, {
-    duration: "2s",
-    target: "2"
+    duration: "30s",
+    target: "5"
   }, {
     duration: "2s",
     target: "0"

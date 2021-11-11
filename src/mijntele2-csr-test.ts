@@ -41,7 +41,7 @@ const scope = config.scope;
 export const options = {
     stages: [
         {duration: "2s", target: "2"},
-        {duration: "2s", target: "2"},
+        {duration: "30s", target: "5"},
         {duration: "2s", target: "0"},
     ],
     thresholds: {
