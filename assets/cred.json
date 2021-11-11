@@ -1,0 +1,15 @@
+{
+  "csr_users": [
+    {
+      "username": "***@consumer.tele2.nl",
+      "password": "***"
+    }
+  ],
+  "csr_config": {
+    "host": "https://sso.tele2.nl",
+    "client_id": "w7cfkLy6WpiWSQDLHBfDpkV7XDYa",
+    "client_secret": "DrLe8z52yewWWrk0EJnfedpm1B4a",
+    "redirect_uri": "https://mijntele2.tele2.nl/mijntele2/csr/wso2CSROpenIdLogin",
+    "scope": "openid"
+  }
+}
