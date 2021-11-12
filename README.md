@@ -32,7 +32,7 @@ npm run build:watch
 
 ## K6 Installation
 
-K6 binary can be installed from k6.io website or downloading the binary from [K6 Github](https://github.com/grafana/k6).
+K6 binary can be installed from [k6.io](https://k6.io) website or downloading the binary from [K6 Github](https://github.com/grafana/k6).
 
 ## Running the Scripts
 
