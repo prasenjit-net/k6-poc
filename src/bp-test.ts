@@ -41,11 +41,8 @@ const evolve_client_id = config.evolve_client_id;
 const evolve_client_secret = config.evolve_client_secret;
 
 export const options = {
-    stages: [
-        {duration: "2s", target: "2"},
-        {duration: "30s", target: "5"},
-        {duration: "2s", target: "0"},
-    ],
+    vus: 1,
+    iterations: 10,
     thresholds: {
         // During the whole test execution, the error rate must be lower than 1%.
         http_req_failed: ['rate<0.01'],
