@@ -51,7 +51,7 @@ __webpack_require__.r(__webpack_exports__);
 
 // EXPORTS
 __webpack_require__.d(__webpack_exports__, {
-  "default": () => (/* binding */ mijntele2_csr_test),
+  "default": () => (/* binding */ bp_test),
   "options": () => (/* binding */ options)
 });
 
@@ -71,7 +71,7 @@ const http_namespaceObject = require("k6/http");;
 var http_default = /*#__PURE__*/__webpack_require__.n(http_namespaceObject);
 ;// CONCATENATED MODULE: external "https://jslib.k6.io/k6-utils/1.1.0/index.js"
 const index_js_namespaceObject = require("https://jslib.k6.io/k6-utils/1.1.0/index.js");;
-;// CONCATENATED MODULE: ./src/mijntele2-csr-test.ts
+;// CONCATENATED MODULE: ./src/bp-test.ts
 
 
 
@@ -83,16 +83,16 @@ const index_js_namespaceObject = require("https://jslib.k6.io/k6-utils/1.1.0/ind
 var authorizeTrend = new metrics_namespaceObject.Trend('app_authorize', true);
 var loginTrend = new metrics_namespaceObject.Trend('app_login', true);
 var tokenTrend = new metrics_namespaceObject.Trend('app_token', true);
-var impersonateTrend = new metrics_namespaceObject.Trend('app_impersonate', true);
+var authExchangeTrend = new metrics_namespaceObject.Trend('app_impersonate', true);
 var introspectTrend = new metrics_namespaceObject.Trend('app_introspect', true);
 var revokeTrend = new metrics_namespaceObject.Trend('app_revoke', true);
 var logoutTrend = new metrics_namespaceObject.Trend('app_logout', true);
 var credFile = __ENV.CRED_FILE || 'cred.json';
 var cred_file_data = JSON.parse(open(credFile));
 var users = new data_namespaceObject.SharedArray('users', function () {
-  return cred_file_data.csr_users;
+  return cred_file_data.bp_users;
 });
-var config = cred_file_data.csr_config;
+var config = cred_file_data.bp_config;
 var host = config.host;
 var login_uri = "".concat(host, "/authep/login");
 var tokenUrl = "".concat(host, "/oauth2/token");
@@ -103,17 +103,14 @@ var client_id = config.client_id;
 var client_secret = config.client_secret;
 var redirect_uri = config.redirect_uri;
 var scope = config.scope;
+var evolve_client_id = config.evolve_client_id;
+var evolve_client_secret = config.evolve_client_secret;
 var options = {
-  stages: [{
-    duration: "2s",
-    target: "2"
-  }, {
-    duration: "30s",
-    target: "5"
-  }, {
-    duration: "2s",
-    target: "0"
-  }],
+  // stages: [
+  //     {duration: "2s", target: "2"},
+  //     {duration: "30s", target: "5"},
+  //     {duration: "2s", target: "0"},
+  // ],
   thresholds: {
     // During the whole test execution, the error rate must be lower than 1%.
     http_req_failed: ['rate<0.01'],
@@ -127,7 +124,7 @@ var options = {
     app_logout: ['p(90)<500']
   }
 };
-/* harmony default export */ function mijntele2_csr_test() {
+/* harmony default export */ function bp_test() {
   var user = users[(execution_default()).vu.idInTest % users.length];
   var auth_code = "";
   var id_token = "";
@@ -152,7 +149,7 @@ var options = {
     });
     if (!result) return;
     var loginResp = resp.submitForm({
-      formSelector: '#form',
+      formSelector: '#login-form',
       fields: {
         username: user.username,
         password: user.password
@@ -160,7 +157,7 @@ var options = {
       params: {
         redirects: 1
       },
-      submitSelector: "button.button-login"
+      submitSelector: "#login-button"
     });
     loginTrend.add(loginResp.timings.duration);
     result = (0,external_k6_namespaceObject.check)(loginResp, {
@@ -246,38 +243,37 @@ var options = {
       }
     });
   });
-  (0,external_k6_namespaceObject.group)("impersonate", function () {
+  (0,external_k6_namespaceObject.group)("auth_exchange", function () {
     var result = true;
     var resp = http_default().post(tokenUrl, {
-      grant_type: "impersonate",
-      csr_token: access_token,
-      scope: scope,
-      username: "se-team@consumer.tele2.nl"
+      grant_type: "auth_exchange",
+      bp_client_id: client_id,
+      refresh_token: refresh_token
     }, {
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
-        Authorization: "Basic ".concat((0,encoding_namespaceObject.b64encode)("".concat(client_id, ":").concat(client_secret)))
+        Authorization: "Basic ".concat((0,encoding_namespaceObject.b64encode)("".concat(evolve_client_id, ":").concat(evolve_client_secret)))
       }
     });
-    impersonateTrend.add(resp.timings.duration);
+    authExchangeTrend.add(resp.timings.duration);
     result = (0,external_k6_namespaceObject.check)(resp, {
-      "impersonate status is 200": function impersonateStatusIs200(r) {
+      "auth_exchange status is 200": function auth_exchangeStatusIs200(r) {
         return r.status === 200;
       },
-      "impersonate returns access token": function impersonateReturnsAccessToken(r) {
+      "auth_exchange returns access token": function auth_exchangeReturnsAccessToken(r) {
         return r.json("access_token") !== undefined;
       },
-      "impersonate returns id token": function impersonateReturnsIdToken(r) {
+      "auth_exchange returns id token": function auth_exchangeReturnsIdToken(r) {
         return r.json("id_token") !== undefined;
       },
-      "impersonate returns refresh token": function impersonateReturnsRefreshToken(r) {
+      "auth_exchange returns refresh token": function auth_exchangeReturnsRefreshToken(r) {
         return r.json("refresh_token") !== undefined;
       }
     });
     if (!result) return;
-    var dsl_token = resp.json("access_token");
+    var exchange_token = resp.json("access_token");
     var introResp = http_default().post(introspectUrl, {
-      token: dsl_token
+      token: exchange_token
     }, {
       headers: {
         "Content-Type": "application/x-www-form-urlencoded"
@@ -294,12 +290,12 @@ var options = {
     });
     if (!result) return;
     var revokeResp = http_default().post(revokeUrl, {
-      token: dsl_token,
+      token: exchange_token,
       token_type_hint: "access_token"
     }, {
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
-        Authorization: "Basic ".concat((0,encoding_namespaceObject.b64encode)("".concat(client_id, ":").concat(client_secret)))
+        Authorization: "Basic ".concat((0,encoding_namespaceObject.b64encode)("".concat(evolve_client_id, ":").concat(evolve_client_secret)))
       }
     });
     revokeTrend.add(revokeResp.timings.duration);
@@ -347,4 +343,4 @@ for(var i in __webpack_exports__) __webpack_export_target__[i] = __webpack_expor
 if(__webpack_exports__.__esModule) Object.defineProperty(__webpack_export_target__, "__esModule", { value: true });
 /******/ })()
 ;
-//# sourceMappingURL=mijntele2-csr-test.js.map
+//# sourceMappingURL=bp-test.js.map

@@ -1,7 +1,7 @@
 {
   "csr_users": [
     {
-      "username": "***@consumer.tele2.nl",
+      "username": "***",
       "password": "***"
     }
   ],
@@ -11,5 +11,20 @@
     "client_secret": "DrLe8z52yewWWrk0EJnfedpm1B4a",
     "redirect_uri": "https://mijntele2.tele2.nl/mijntele2/csr/wso2CSROpenIdLogin",
     "scope": "openid"
+  },
+  "bp_users": [
+    {
+      "username": "***",
+      "password": "***"
+    }
+  ],
+  "bp_config": {
+    "host": "https://sso.tele2.nl",
+    "client_id": "7du5skDAZmJowZFzvFdJQDWrYu0a",
+    "client_secret": "iS9vzqmw2O6CtlpufZlX1vIQp04a",
+    "redirect_uri": "https://mijn.tele2zakelijk.nl/SsoComplete",
+    "scope": "openid",
+    "evolve_client_id": "9z9ZUlK4LBfx0LZblBUfESeCMBMa",
+    "evolve_client_secret": "1TPIJwh2StxuqI6HrqBjZfjlPQca"
   }
 }
