@@ -43,7 +43,7 @@ const evolve_client_secret = config.evolve_client_secret;
 
 export const options = {
     vus: 1,
-    iterations: 1,
+    // iterations: 10,
     thresholds: {
         // During the whole test execution, the error rate must be lower than 1%. changed.
         http_req_failed: ['rate<0.01'],

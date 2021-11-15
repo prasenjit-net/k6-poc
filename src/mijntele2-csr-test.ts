@@ -41,7 +41,7 @@ const scope = config.scope;
 
 export const options = {
     vus: 1,
-    iterations: 1,
+    // iterations: 10,
     thresholds: {
         // During the whole test execution, the error rate must be lower than 1%.
         http_req_failed: ['rate<0.01'],
@@ -151,7 +151,7 @@ export default function () {
             grant_type: "impersonate",
             csr_token: access_token,
             scope,
-            username: "se-team@consumer.tele2.nl"
+            username: "TELE2.NL/se-team@consumer.tele2.nl"
         }, {
             headers: {
                 "Content-Type": "application/x-www-form-urlencoded",
