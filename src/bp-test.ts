@@ -30,6 +30,7 @@ const config = cred_file_data.bp_config;
 const host = config.host;
 const login_uri = `${host}/authep/login`
 const tokenUrl = `${host}/oauth2/token`
+const commonAuthUrl = `${host}/commonauth`
 const introspectUrl = `${host}/oauth2/introspect`;
 const revokeUrl = `${host}/oauth2/revoke`;
 const logoutUrl = `${host}/oidc/logout`;
@@ -42,9 +43,9 @@ const evolve_client_secret = config.evolve_client_secret;
 
 export const options = {
     vus: 1,
-    iterations: 10,
+    iterations: 1,
     thresholds: {
-        // During the whole test execution, the error rate must be lower than 1%.
+        // During the whole test execution, the error rate must be lower than 1%. changed.
         http_req_failed: ['rate<0.01'],
         http_req_duration: ['p(90)<500'],
         app_authorize: ['p(90)<500'],
@@ -76,16 +77,13 @@ export default function () {
             "login page has state": (r) => r.url.includes(`state=${state}`),
         });
         if (!result) return;
-        const loginResp = resp.submitForm({
-            formSelector: '#login-form',
-            fields: {
-                username: user.username,
-                password: user.password,
-            },
-            params: {
-                redirects: 1
-            },
-            submitSelector: "#login-button"
+        const sessionDataKey = resp.url.split("sessionDataKey=")[1].split("&")[0];
+        const loginResp = http.post(commonAuthUrl, {
+            username: user.username,
+            password: user.password,
+            sessionDataKey
+        },{
+            redirects: 1
         });
         loginTrend.add(loginResp.timings.duration);
         result = check(loginResp, {
@@ -205,7 +203,7 @@ export default function () {
         });
         logoutTrend.add(resp.timings.duration);
         result = check(resp, {
-            "logout status is 200": (r) => r.status === 302,
+            "logout status is 302": (r) => r.status === 302,
             "logout redirects to redirect_uri": (r) => r.headers["Location"].startsWith(redirect_uri),
         });
         if (!result) return;

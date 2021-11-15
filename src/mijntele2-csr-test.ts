@@ -30,6 +30,7 @@ const config = cred_file_data.csr_config;
 const host = config.host;
 const login_uri = `${host}/authep/login`
 const tokenUrl = `${host}/oauth2/token`
+const commonAuthUrl = `${host}/commonauth`
 const introspectUrl = `${host}/oauth2/introspect`;
 const revokeUrl = `${host}/oauth2/revoke`;
 const logoutUrl = `${host}/oidc/logout`;
@@ -40,7 +41,7 @@ const scope = config.scope;
 
 export const options = {
     vus: 1,
-    iterations: 10,
+    iterations: 1,
     thresholds: {
         // During the whole test execution, the error rate must be lower than 1%.
         http_req_failed: ['rate<0.01'],
@@ -74,16 +75,13 @@ export default function () {
             "login page has state": (r) => r.url.includes(`state=${state}`),
         });
         if (!result) return;
-        const loginResp = resp.submitForm({
-            formSelector: '#form',
-            fields: {
-                username: user.username,
-                password: user.password,
-            },
-            params: {
-                redirects: 1
-            },
-            submitSelector: "button.button-login"
+        const sessionDataKey = resp.url.split("sessionDataKey=")[1].split("&")[0];
+        const loginResp = http.post(commonAuthUrl, {
+            username: user.username,
+            password: user.password,
+            sessionDataKey
+        },{
+            redirects: 1
         });
         loginTrend.add(loginResp.timings.duration);
         result = check(loginResp, {
@@ -203,7 +201,7 @@ export default function () {
         });
         logoutTrend.add(resp.timings.duration);
         result = check(resp, {
-            "logout status is 200": (r) => r.status === 302,
+            "logout status is 302": (r) => r.status === 302,
             "logout redirects to redirect_uri": (r) => r.headers["Location"].startsWith(redirect_uri),
         });
         if (!result) return;
